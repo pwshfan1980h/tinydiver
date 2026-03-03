@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TinyDiver — Dive Deep, Survive!</title>
+  <meta name="description"
+    content="TinyDiver: A Frogger-inspired underwater diving game. Navigate depths, dodge cartoon predators, and retrieve the treasure!">
+  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Outfit:wght@400;600;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+  <div id="game-container">
+    <!-- Water depth gradient background -->
+    <div id="water-bg"></div>
+
+    <!-- Caustics light overlay at surface -->
+    <div id="caustics-overlay"></div>
+
+    <!-- Dark vignette that intensifies with depth -->
+    <div id="depth-vignette"></div>
+
+    <!-- Parallax background layers -->
+    <div id="parallax-back" class="parallax-layer"></div>
+    <div id="parallax-mid" class="parallax-layer"></div>
+
+    <!-- Lighting layers -->
+    <div id="darkness-layer"></div>
+    <div id="flashlight-beam" class="flashlight-beam"></div>
+
+    <!-- Game world - scrolls vertically -->
+    <div id="game-world">
+      <!-- Surface shimmer -->
+      <div id="surface-zone">
+        <div class="wave wave-1"></div>
+        <div class="wave wave-2"></div>
+        <div class="wave wave-3"></div>
+      </div>
+
+      <!-- Predator lanes injected by JS -->
+
+      <!-- Kelp and seafloor injected by JS -->
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+      <div id="hud-left">
+        <div id="depth-meter">
+          <div id="depth-label">SURFACE</div>
+          <div id="depth-bar-track">
+            <div id="depth-bar-fill"></div>
+            <div id="depth-bar-diver">🤿</div>
+          </div>
+        </div>
+        <div id="lives-display">
+          <span class="life-icon" id="life-1">❤️</span>
+          <span class="life-icon" id="life-2">❤️</span>
+          <span class="life-icon" id="life-3">❤️</span>
+        </div>
+      </div>
+      <div>
+        <div id="game-title">TINYDIVER</div>
+        <div id="controls-hint">WASD to swim</div>
+      </div>
+    </div>
+
+    <!-- Objective overlay -->
+    <div id="objective-banner" class="show">
+      <span>🏊 Dive to the treasure chest and return!</span>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-screen">
+      <h1 id="game-over-title">GAME OVER</h1>
+      <p id="game-over-subtitle">The depths claimed you...</p>
+      <button class="retry-btn" onclick="location.reload()">TRY AGAIN</button>
+    </div>
+  </div>
+
+  <script type="module" src="game.js"></script>
+</body>
+
+</html>
