@@ -50,13 +50,37 @@ body {
   overflow: hidden;
 }
 
-/* Distant silhouettes */
-.bg-silhouette {
+/* Distant background wildlife/ruins */
+.bg-drifter {
   position: absolute;
-  background-color: rgba(0, 0, 0, 0.4);
-  filter: blur(8px);
-  border-radius: 50%;
-  transition: transform 5s linear;
+  pointer-events: none;
+  filter: blur(1.5px);
+}
+
+.bg-drifter svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.whale-silhouette {
+  filter: blur(2.2px);
+}
+
+.school-silhouette {
+  filter: blur(1.4px);
+}
+
+.bg-reef-silhouette {
+  position: absolute;
+  pointer-events: none;
+  filter: blur(1.2px);
+}
+
+.bg-reef-silhouette svg {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* ---- Caustics Overlay (surface light ripples) ---- */

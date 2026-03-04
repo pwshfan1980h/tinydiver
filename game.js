@@ -13,15 +13,20 @@
   const FRICTION = 0.90;            // Adjusted for floatier water physics
   const BUBBLE_CHANCE = 0.15;       // chance to spawn bubble per frame while moving
   const MAX_BUBBLES = 40;
-  const PREDATOR_COUNT = 14;
+  const DARKNESS_MAX_OPACITY = 0.85;
+  const ABYSS_DARKNESS_REDUCTION = 0.18;
+  const DEEP_PREDATOR_SPEED_BONUS = 0.22;
+  const TREASURE_ESCAPE_SPEED_BONUS = 0.08;
+  const DIVER_HITBOX_INSET = 6;
+  const PREDATOR_HITBOX_SCALE = 0.76;
 
   // Depth zone boundaries (fraction of WORLD_HEIGHT)
   const ZONES = [
     { name: 'SURFACE', top: 0, bot: 0.12, color1: '#4dd9e8', color2: '#1ab0c4', label: 'SURFACE' },
     { name: 'SHALLOWS', top: 0.12, bot: 0.35, color1: '#1ab0c4', color2: '#0e7a96', label: 'SHALLOWS' },
     { name: 'MIDWATER', top: 0.35, bot: 0.58, color1: '#0e7a96', color2: '#08405a', label: 'MID-WATER' },
-    { name: 'DEEP', top: 0.58, bot: 0.80, color1: '#08405a', color2: '#031428', label: 'THE DEEP' },
-    { name: 'ABYSS', top: 0.80, bot: 1.0, color1: '#031428', color2: '#000000', label: 'THE ABYSS' },
+    { name: 'DEEP', top: 0.58, bot: 0.80, color1: '#0b4e6d', color2: '#082338', label: 'THE DEEP' },
+    { name: 'ABYSS', top: 0.80, bot: 1.0, color1: '#082338', color2: '#041626', label: 'THE ABYSS' },
   ];
 
   // ---- STATE ----
@@ -161,36 +166,16 @@
     const h = 60 * scale;
     return `
     <svg width="${w}" height="${h}" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-      <!-- Fat body -->
-      <ellipse cx="50" cy="32" rx="40" ry="22" fill="${primaryColor}"/>
-      <ellipse cx="50" cy="32" rx="38" ry="20" fill="${secondaryColor}"/>
-      <!-- Belly -->
-      <ellipse cx="50" cy="38" rx="30" ry="12" fill="#c8d6e0"/>
-      <!-- Dorsal fin -->
-      <path d="M 45 12 L 50 -2 L 58 14" fill="#4a5e72"/>
-      <!-- Tail fin -->
-      <path d="M 10 25 L -5 10 L 5 32 L -5 50 L 10 38" fill="#4a5e72">
-        <animateTransform attributeName="transform" type="rotate" values="-5 10 32; 5 10 32; -5 10 32" dur="0.6s" repeatCount="indefinite"/>
+      <path d="M 8 30 Q 24 13 56 12 Q 84 12 95 28 Q 84 44 56 45 Q 24 46 8 30 Z" fill="${primaryColor}"/>
+      <path d="M 10 31 Q 24 20 56 20 Q 81 20 90 31 Q 81 40 56 40 Q 24 41 10 31 Z" fill="${secondaryColor}" opacity="0.9"/>
+      <path d="M 45 14 L 52 0 L 60 15 Z" fill="#3e5368"/>
+      <path d="M 8 30 L -3 17 L 2 30 L -3 44 L 8 32 Z" fill="#3e5368">
+        <animateTransform attributeName="transform" type="rotate" values="-6 8 30; 6 8 30; -6 8 30" dur="0.55s" repeatCount="indefinite"/>
       </path>
-      <!-- Pectoral fin -->
-      <ellipse cx="60" cy="45" rx="12" ry="4" fill="#4a5e72" transform="rotate(15 60 45)"/>
-      <!-- BIG goofy eye -->
-      <circle cx="72" cy="24" r="10" fill="white"/>
-      <circle cx="74" cy="24" r="6" fill="#222"/>
-      <circle cx="76" cy="22" r="2.5" fill="white"/>
-      <!-- Other eye (far side, smaller perspective) -->
-      <circle cx="68" cy="20" r="4" fill="white" opacity="0.4"/>
-      <!-- Goofy smile with teeth -->
-      <path d="M 65 38 Q 75 46 88 36" fill="none" stroke="#333" stroke-width="2"/>
-      <!-- Teeth -->
-      <polygon points="70,38 72,43 74,38" fill="white"/>
-      <polygon points="76,37 78,42 80,36" fill="white"/>
-      <polygon points="82,36 84,41 86,35" fill="white"/>
-      <!-- Eyebrow -->
-      <line x1="64" y1="16" x2="78" y2="14" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Nose bump -->
-      <ellipse cx="88" cy="30" rx="6" ry="8" fill="${secondaryColor}"/>
-      <!-- Wobble animation -->
+      <path d="M 55 38 L 70 45 L 61 34 Z" fill="#3e5368"/>
+      <circle cx="76" cy="24" r="2.3" fill="#0b0f14"/>
+      <path d="M 82 31 L 92 31" stroke="#111827" stroke-width="1.7" stroke-linecap="round"/>
+      <path d="M 68 30 L 73 33 M 64 31 L 69 34 M 60 32 L 65 35" stroke="#2b3644" stroke-width="1.2" stroke-linecap="round"/>
       <animateTransform attributeName="transform" type="translate" values="0,0; 0,-3; 0,3; 0,0" dur="2s" repeatCount="indefinite"/>
     </svg>`;
   }
@@ -211,23 +196,13 @@
       const y2 = 25 + Math.sin(angle) * 22;
       return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#e67e22" stroke-width="2.5" stroke-linecap="round"/>`;
     }).join('')}
-      <!-- Belly spot -->
-      <ellipse cx="25" cy="30" rx="10" ry="7" fill="#ffeaa7" opacity="0.6"/>
-      <!-- Angry eyes -->
-      <circle cx="19" cy="20" r="5" fill="white"/>
-      <circle cx="31" cy="20" r="5" fill="white"/>
-      <circle cx="20" cy="20" r="3" fill="#c0392b"/>
-      <circle cx="32" cy="20" r="3" fill="#c0392b"/>
-      <circle cx="20.5" cy="19.5" r="1" fill="white"/>
-      <circle cx="32.5" cy="19.5" r="1" fill="white"/>
-      <!-- Angry eyebrows -->
-      <line x1="14" y1="14" x2="22" y2="16" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
-      <line x1="36" y1="14" x2="28" y2="16" stroke="#333" stroke-width="2.5" stroke-linecap="round"/>
-      <!-- Pout mouth -->
-      <circle cx="25" cy="32" r="3" fill="#e74c3c"/>
-      <ellipse cx="25" cy="31" rx="2" ry="1.5" fill="#c0392b"/>
-      <!-- Tiny tail fin -->
-      <path d="M 7 25 L 2 20 L 4 25 L 2 30 Z" fill="#e67e22"/>
+      <ellipse cx="25" cy="30" rx="10" ry="7" fill="#d0b374" opacity="0.45"/>
+      <circle cx="18" cy="20" r="4.4" fill="#0f172a"/>
+      <circle cx="31" cy="20" r="4.4" fill="#0f172a"/>
+      <circle cx="19" cy="19" r="1.1" fill="#d1d5db" opacity="0.8"/>
+      <circle cx="32" cy="19" r="1.1" fill="#d1d5db" opacity="0.8"/>
+      <path d="M 22 30 L 28 30" stroke="#7a2e1f" stroke-width="1.8" stroke-linecap="round"/>
+      <path d="M 7 25 L 1 19 L 4 25 L 1 31 Z" fill="#8d5b29"/>
       <!-- Puff animation -->
       <animateTransform attributeName="transform" type="scale" values="1; 1.08; 1" dur="1.5s" repeatCount="indefinite" additive="sum" origin="25 25"/>
     </svg>`;
@@ -243,13 +218,7 @@
       <ellipse cx="25" cy="18" rx="16" ry="12" fill="rgba(${domeColor}, 0.3)"/>
       <!-- Inner glow -->
       <ellipse cx="25" cy="16" rx="8" ry="6" fill="rgba(255,200,255,0.3)"/>
-      <!-- Eyes -->
-      <circle cx="20" cy="18" r="3" fill="rgba(255,255,255,0.8)"/>
-      <circle cx="30" cy="18" r="3" fill="rgba(255,255,255,0.8)"/>
-      <circle cx="20.5" cy="18.5" r="1.5" fill="#6c3483"/>
-      <circle cx="30.5" cy="18.5" r="1.5" fill="#6c3483"/>
-      <!-- Little smile -->
-      <path d="M 22 24 Q 25 27 28 24" fill="none" stroke="rgba(${innerColor},0.6)" stroke-width="1.5"/>
+      <path d="M 19 21 L 31 21" stroke="rgba(${innerColor},0.45)" stroke-width="1.2" stroke-linecap="round"/>
       <!-- Tentacles -->
       ${[10, 17, 25, 33, 40].map((x, i) => `
         <path d="M ${x} 32 Q ${x + 3} 45 ${x - 2} 60 Q ${x + 2} 65 ${x} 70" 
@@ -271,8 +240,7 @@
     <svg width="20" height="12" viewBox="0 0 20 12" xmlns="http://www.w3.org/2000/svg">
       <ellipse cx="10" cy="6" rx="8" ry="5" fill="${color}"/>
       <polygon points="2,6 -2,2 -2,10" fill="${color}"/>
-      <circle cx="14" cy="5" r="1.5" fill="white"/>
-      <circle cx="14.5" cy="5" r="0.8" fill="#333"/>
+      <circle cx="14.2" cy="5" r="1.2" fill="#0f172a"/>
     </svg>`;
   }
 
@@ -355,29 +323,82 @@
     </svg>`;
   }
 
+  function createBackgroundWhaleSVG() {
+    return `
+    <svg viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M18 44 Q42 20 98 22 Q170 24 212 40 Q224 44 228 50 Q216 58 202 60 Q168 66 112 66 Q48 66 18 44 Z" fill="rgba(12, 28, 40, 0.9)"/>
+      <path d="M210 36 L236 24 L226 42 L236 58 L210 50 Z" fill="rgba(14, 33, 48, 0.92)"/>
+      <path d="M118 22 L136 6 L142 22 Z" fill="rgba(18, 39, 56, 0.85)"/>
+    </svg>`;
+  }
+
+  function createBackgroundSchoolSVG() {
+    const fish = Array(8).fill(0).map((_, i) => {
+      const x = 18 + i * 28;
+      const y = 18 + (i % 2 === 0 ? 0 : 8);
+      return `<path d="M ${x} ${y} Q ${x + 10} ${y - 6} ${x + 20} ${y} Q ${x + 10} ${y + 6} ${x} ${y} Z" fill="rgba(25, 55, 75, 0.8)"/>`;
+    }).join('');
+    return `<svg viewBox="0 0 260 60" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${fish}</svg>`;
+  }
+
+  function createBackgroundRuinSVG() {
+    return `
+    <svg viewBox="0 0 260 140" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M10 130 L10 64 L42 58 L42 130 Z" fill="rgba(20, 37, 46, 0.75)"/>
+      <path d="M62 130 L62 44 L106 36 L106 130 Z" fill="rgba(24, 45, 56, 0.76)"/>
+      <path d="M126 130 L126 78 L170 70 L170 130 Z" fill="rgba(18, 32, 44, 0.75)"/>
+      <path d="M190 130 L190 52 L240 46 L240 130 Z" fill="rgba(20, 40, 52, 0.78)"/>
+      <path d="M0 130 L260 130 L260 140 L0 140 Z" fill="rgba(13, 25, 34, 0.8)"/>
+    </svg>`;
+  }
+
   function createParallaxBackgrounds() {
     const backLayer = document.getElementById('parallax-back');
     const midLayer = document.getElementById('parallax-mid');
+    backLayer.innerHTML = '';
+    midLayer.innerHTML = '';
 
-    // Add distant shadowy blobs (sea monsters/whales)
-    for (let i = 0; i < 6; i++) {
-      const shape = document.createElement('div');
-      shape.className = 'bg-silhouette';
-      shape.style.width = (300 + Math.random() * 500) + 'px';
-      shape.style.height = (100 + Math.random() * 200) + 'px';
-      shape.style.left = (Math.random() * 100) + '%';
-      shape.style.top = (WORLD_HEIGHT * 0.3 + Math.random() * WORLD_HEIGHT * 0.7) + 'px';
-
-      // Random drift direction
+    for (let i = 0; i < 5; i++) {
+      const whale = document.createElement('div');
+      whale.className = 'bg-drifter whale-silhouette';
+      whale.innerHTML = createBackgroundWhaleSVG();
+      whale.style.width = (280 + Math.random() * 220) + 'px';
+      whale.style.left = (Math.random() * 100) + '%';
+      whale.style.top = (WORLD_HEIGHT * 0.28 + Math.random() * WORLD_HEIGHT * 0.62) + 'px';
+      whale.style.opacity = (0.24 + Math.random() * 0.16).toFixed(2);
       const dir = Math.random() > 0.5 ? 1 : -1;
-      shape.dataset.speed = (0.2 + Math.random() * 0.5) * dir;
-      shape.dataset.yPos = parseFloat(shape.style.top);
+      whale.dataset.speed = String((0.08 + Math.random() * 0.16) * dir);
+      whale.dataset.baseY = String(parseFloat(whale.style.top));
+      whale.dataset.phase = String(Math.random() * Math.PI * 2);
+      whale.dataset.driftAmp = String(5 + Math.random() * 10);
+      backLayer.appendChild(whale);
+    }
 
-      // Darker deeper down
-      const depthFrac = parseFloat(shape.style.top) / WORLD_HEIGHT;
-      shape.style.backgroundColor = `rgba(0, 0, 0, ${0.3 + depthFrac * 0.4})`;
+    for (let i = 0; i < 10; i++) {
+      const school = document.createElement('div');
+      school.className = 'bg-drifter school-silhouette';
+      school.innerHTML = createBackgroundSchoolSVG();
+      school.style.width = (180 + Math.random() * 140) + 'px';
+      school.style.left = (Math.random() * 100) + '%';
+      school.style.top = (WORLD_HEIGHT * 0.22 + Math.random() * WORLD_HEIGHT * 0.66) + 'px';
+      school.style.opacity = (0.18 + Math.random() * 0.14).toFixed(2);
+      const dir = Math.random() > 0.5 ? 1 : -1;
+      school.dataset.speed = String((0.16 + Math.random() * 0.2) * dir);
+      school.dataset.baseY = String(parseFloat(school.style.top));
+      school.dataset.phase = String(Math.random() * Math.PI * 2);
+      school.dataset.driftAmp = String(3 + Math.random() * 7);
+      backLayer.appendChild(school);
+    }
 
-      backLayer.appendChild(shape);
+    for (let i = 0; i < 7; i++) {
+      const ruin = document.createElement('div');
+      ruin.className = 'bg-reef-silhouette';
+      ruin.innerHTML = createBackgroundRuinSVG();
+      ruin.style.width = (180 + Math.random() * 120) + 'px';
+      ruin.style.left = (i * 16 + Math.random() * 8) + '%';
+      ruin.style.top = (WORLD_HEIGHT * 0.48 + Math.random() * WORLD_HEIGHT * 0.46) + 'px';
+      ruin.style.opacity = (0.2 + Math.random() * 0.2).toFixed(2);
+      midLayer.appendChild(ruin);
     }
   }
 
@@ -393,23 +414,11 @@
         </radialGradient>
       </defs>
       
-      <!-- Mantle -->
       <path d="M 75 10 Q 120 20 100 70 Q 75 90 50 70 Q 30 20 75 10" fill="url(#krakenGrad${coreColor.replace('#', '')})"/>
-      
-      <!-- Angry Eyes -->
-      <circle cx="65" cy="65" r="8" fill="#e74c3c"/>
-      <circle cx="85" cy="65" r="8" fill="#e74c3c"/>
-      <circle cx="65" cy="65" r="3" fill="#000"/>
-      <circle cx="85" cy="65" r="3" fill="#000"/>
-      
-      <!-- Pupil slitting -->
-      <line x1="65" y1="60" x2="65" y2="70" stroke="#000" stroke-width="2"/>
-      <line x1="85" y1="60" x2="85" y2="70" stroke="#000" stroke-width="2"/>
+      <ellipse cx="66" cy="64" rx="6" ry="5" fill="#0b0f14"/>
+      <ellipse cx="84" cy="64" rx="6" ry="5" fill="#0b0f14"/>
+      <path d="M 70 82 L 80 82 L 75 92 Z" fill="#d4a84f"/>
 
-      <!-- Beak -->
-      <path d="M 70 80 L 80 80 L 75 90 Z" fill="#f1c40f"/>
-
-      <!-- Tentacles (animated) -->
       ${[40, 55, 75, 95, 110].map((x, i) => `
         <path d="M ${x} 80 Q ${x - 20 + i * 10} 120 ${x + 10 - i * 5} 140 Q ${x} 150 ${x - 10 + i * 5} 145" 
               fill="none" stroke="${coreColor}" stroke-width="${12 - Math.abs(2 - i) * 2}" stroke-linecap="round">
@@ -445,6 +454,47 @@
       <!-- Mouth & Teeth -->
       <path d="M 170 20 L 175 22 L 172 26" fill="none" stroke="#fff" stroke-width="1"/>
       <path d="M 155 24 Q 165 26 175 22" fill="none" stroke="#111" stroke-width="2"/>
+    </svg>`;
+  }
+
+  function createBarracudaSVG(scale = 1, bodyColor = '#95a5a6') {
+    const w = 140 * scale;
+    const h = 40 * scale;
+    return `
+    <svg width="${w}" height="${h}" viewBox="0 0 140 40" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 10 20 Q 30 8 95 10 Q 125 11 130 20 Q 125 29 95 30 Q 30 32 10 20 Z" fill="${bodyColor}"/>
+      <path d="M 10 20 L 0 10 L 0 30 Z" fill="#7f8c8d"/>
+      <circle cx="108" cy="17" r="3.2" fill="#fff"/>
+      <circle cx="109" cy="17" r="1.8" fill="#1f2937"/>
+      <path d="M 100 23 L 114 23" stroke="#1f2937" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  function createMantaSVG(scale = 1, topColor = '#2c3e50', underColor = '#34495e') {
+    const w = 150 * scale;
+    const h = 70 * scale;
+    return `
+    <svg width="${w}" height="${h}" viewBox="0 0 150 70" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 8 36 Q 45 5 76 16 Q 108 5 144 36 Q 108 46 76 56 Q 45 46 8 36 Z" fill="${topColor}"/>
+      <path d="M 28 37 Q 76 48 124 37 Q 76 62 28 37 Z" fill="${underColor}" opacity="0.65"/>
+      <path d="M 72 34 Q 76 40 80 34" stroke="#111827" stroke-width="2" fill="none"/>
+      <circle cx="66" cy="30" r="2" fill="#111827"/>
+      <circle cx="84" cy="30" r="2" fill="#111827"/>
+    </svg>`;
+  }
+
+  function createAnglerSVG(scale = 1, bodyColor = '#4b5563', lureColor = '#f7d066') {
+    const w = 90 * scale;
+    const h = 56 * scale;
+    return `
+    <svg width="${w}" height="${h}" viewBox="0 0 90 56" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 8 30 Q 20 12 44 12 Q 72 12 82 28 Q 72 44 44 44 Q 20 44 8 30 Z" fill="${bodyColor}"/>
+      <path d="M 8 30 L 0 20 L 0 40 Z" fill="#374151"/>
+      <path d="M 40 15 Q 52 0 60 8" stroke="#9ca3af" stroke-width="2.2" fill="none"/>
+      <circle cx="62" cy="8" r="4" fill="${lureColor}" opacity="0.9"/>
+      <circle cx="58" cy="24" r="4" fill="#fff"/>
+      <circle cx="59" cy="24" r="2" fill="#111827"/>
+      <path d="M 55 33 L 72 33" stroke="#111827" stroke-width="2" stroke-linecap="round"/>
     </svg>`;
   }
 
@@ -551,20 +601,21 @@
       // Mid-water: Mixed sharks, pufferfish, and schools
       { type: 'shark', y: WORLD_HEIGHT * 0.35, speed: 1.5, scale: 0.9, colors: ['#5a6e82', '#6b8299'] }, // Standard
       { type: 'shark', y: WORLD_HEIGHT * 0.38, speed: -1.8, scale: 1.0, colors: ['#7f8c8d', '#95a5a6'] }, // Gray
-      { type: 'fish', y: WORLD_HEIGHT * 0.40, speed: 1.9, scale: 1 },
+      { type: 'barracuda', y: WORLD_HEIGHT * 0.40, speed: 2.6, scale: 1.0, colors: ['#95a5a6'] },
       { type: 'puffer', y: WORLD_HEIGHT * 0.42, speed: 1.2, scale: 0.8, colors: ['#f39c12', '#f1c40f'] },
       { type: 'shark', y: WORLD_HEIGHT * 0.45, speed: 2.0, scale: 1.1, colors: ['#34495e', '#2c3e50'] }, // Dark
       { type: 'fish', y: WORLD_HEIGHT * 0.47, speed: -2.3, scale: 1 },
+      { type: 'angler', y: WORLD_HEIGHT * 0.49, speed: -1.4, scale: 1.0, colors: ['#475569', '#f1c40f'] },
       { type: 'eel', y: WORLD_HEIGHT * 0.50, speed: 3.5, scale: 1.0, colors: ['#27ae60'] }, // Green
       { type: 'shark', y: WORLD_HEIGHT * 0.52, speed: -2.3, scale: 1.2, colors: ['#e74c3c', '#c0392b'] }, // Aggressive red
       { type: 'puffer', y: WORLD_HEIGHT * 0.55, speed: -1.5, scale: 1.0, colors: ['#e67e22', '#d35400'] }, // Orange
-      { type: 'fish', y: WORLD_HEIGHT * 0.57, speed: 2.5, scale: 1 },
+      { type: 'manta', y: WORLD_HEIGHT * 0.57, speed: 1.6, scale: 1.1, colors: ['#2c3e50', '#4b5563'] },
 
       // Deep: Tense, larger predators, colorful bioluminescence 
       { type: 'eel', y: WORLD_HEIGHT * 0.60, speed: -4.0, scale: 1.2, colors: ['#8e44ad'] }, // Purple eel
-      { type: 'puffer', y: WORLD_HEIGHT * 0.62, speed: 1.8, scale: 1.2, colors: ['#1abc9c', '#16a085'] }, // Cyan glowing
+      { type: 'angler', y: WORLD_HEIGHT * 0.62, speed: 1.4, scale: 1.2, colors: ['#1f2937', '#f39c12'] },
       { type: 'shark', y: WORLD_HEIGHT * 0.65, speed: 2.8, scale: 1.5, colors: ['#2c3e50', '#1a252f'] }, // Massive dark shark
-      { type: 'fish', y: WORLD_HEIGHT * 0.67, speed: -3.0, scale: 1.2 },
+      { type: 'barracuda', y: WORLD_HEIGHT * 0.67, speed: -3.4, scale: 1.1, colors: ['#7f8c8d'] },
       { type: 'eel', y: WORLD_HEIGHT * 0.70, speed: 4.5, scale: 1.4, colors: ['#e74c3c'] }, // Blood red eel
       { type: 'puffer', y: WORLD_HEIGHT * 0.72, speed: -1.6, scale: 1.3, colors: ['#9b59b6', '#8e44ad'] }, // Purple puffer
       { type: 'shark', y: WORLD_HEIGHT * 0.75, speed: 2.5, scale: 1.6, colors: ['#111', '#222'] }, // Nearly black shark
@@ -576,10 +627,13 @@
       { type: 'eel', y: WORLD_HEIGHT * 0.84, speed: -5.0, scale: 2.0, colors: ['#f1c40f'] }, // Lightning yellow eel
       { type: 'shark', y: WORLD_HEIGHT * 0.86, speed: -3.5, scale: 2.2, colors: ['#000', '#111'] }, // Leviathan shark
       { type: 'kraken', y: WORLD_HEIGHT * 0.88, speed: -1.2, scale: 1.8, colors: ['#c0392b', '#000'] }, // HUGE red kraken
-      { type: 'puffer', y: WORLD_HEIGHT * 0.90, speed: 2.5, scale: 1.6, colors: ['#000', '#e74c3c'] }, // Black/red puffer
+      { type: 'manta', y: WORLD_HEIGHT * 0.90, speed: 1.7, scale: 1.9, colors: ['#111827', '#374151'] },
+      { type: 'angler', y: WORLD_HEIGHT * 0.91, speed: -1.8, scale: 1.4, colors: ['#111827', '#f4d03f'] },
       { type: 'jelly', y: WORLD_HEIGHT * 0.92, speed: -0.6, scale: 2.0, colors: ['100, 255, 150', '150, 255, 200'] }, // Green Jelly
+      { type: 'barracuda', y: WORLD_HEIGHT * 0.93, speed: -4.2, scale: 1.6, colors: ['#bdc3c7'] },
       { type: 'eel', y: WORLD_HEIGHT * 0.94, speed: 5.5, scale: 2.5, colors: ['#2980b9'] }, // Giant blue eel
       { type: 'shark', y: WORLD_HEIGHT * 0.96, speed: 4.0, scale: 2.5, colors: ['#c0392b', '#8e44ad'] }, // Abyssal horror shark
+      { type: 'puffer', y: WORLD_HEIGHT * 0.97, speed: -2.8, scale: 1.5, colors: ['#7f8c8d', '#e74c3c'] },
       { type: 'kraken', y: WORLD_HEIGHT * 0.98, speed: 1.5, scale: 2.2, colors: ['#000', '#222'] }, // Shadow kraken
     ];
 
@@ -609,10 +663,22 @@
           svg = createJellyfishSVG(def.scale, def.colors ? def.colors[0] : undefined, def.colors ? def.colors[1] : undefined);
           w = 50 * def.scale; h = 70 * def.scale;
           break;
+        case 'barracuda':
+          svg = createBarracudaSVG(def.scale, def.colors ? def.colors[0] : undefined);
+          w = 140 * def.scale; h = 40 * def.scale;
+          break;
+        case 'manta':
+          svg = createMantaSVG(def.scale, def.colors ? def.colors[0] : undefined, def.colors ? def.colors[1] : undefined);
+          w = 150 * def.scale; h = 70 * def.scale;
+          break;
+        case 'angler':
+          svg = createAnglerSVG(def.scale, def.colors ? def.colors[0] : undefined, def.colors ? def.colors[1] : undefined);
+          w = 90 * def.scale; h = 56 * def.scale;
+          break;
         case 'fish':
           // Small school of fish
           svg = Array(5).fill(0).map((_, j) => {
-            const colors = ['#ffb347', '#ff6b6b', '#74b9ff', '#a29bfe', '#fd79a8', '#f1c40f', '#2ecc71', '#e74c3c'];
+            const colors = ['#6b7c93', '#4a5f73', '#5c7085', '#7f8c8d', '#566573'];
             return `<div class="small-fish" style="position:absolute; left:${j * 22}px; top:${Math.sin(j) * 8}px; animation: school-swim ${1 + j * 0.2}s ease-in-out infinite ${j * 0.15}s">${createSmallFishSVG(colors[Math.floor(Math.random() * colors.length)])}</div>`;
           }).join('');
           w = 120; h = 30;
@@ -633,9 +699,11 @@
         el,
         x: startX,
         y: def.y,
+        baseY: def.y,
         vx: def.speed,
         w, h,
         type: def.type,
+        phase: Math.random() * Math.PI * 2
       };
 
       el.style.left = pred.x + 'px';
@@ -693,7 +761,12 @@
 
   // ---- GAME LOOP ----
   function gameLoop() {
-    if (diver.dead) return;
+    if (!updateGameFrame()) return;
+    requestAnimationFrame(gameLoop);
+  }
+
+  function updateGameFrame() {
+    if (diver.dead) return false;
     frameCount++;
     updateDiver();
     updatePredators();
@@ -704,25 +777,30 @@
     checkCollisions();
     if (frameCount % 3 === 0) spawnBubbles();
     cleanBubbles();
-    requestAnimationFrame(gameLoop);
+    return true;
   }
 
   function updateParallax() {
-    const scrollFrac = cameraY / (WORLD_HEIGHT - VIEW_HEIGHT());
     document.getElementById('parallax-back').style.transform = `translateY(${cameraY * 0.8}px)`;
     document.getElementById('parallax-mid').style.transform = `translateY(${cameraY * 0.5}px)`;
 
-    // Shift the silhouettes slowly horizontally
-    const silhouettes = document.querySelectorAll('.bg-silhouette');
-    silhouettes.forEach(s => {
+    // Shift drifting silhouettes slowly horizontally.
+    const silhouettes = document.querySelectorAll('.bg-drifter');
+    silhouettes.forEach((s) => {
       const currentLeft = parseFloat(s.style.left) || 0;
-      let newLeft = currentLeft + parseFloat(s.dataset.speed);
+      const speed = parseFloat(s.dataset.speed || '0');
+      let newLeft = currentLeft + speed;
 
       // wrap around
-      if (newLeft > 110 && s.dataset.speed > 0) newLeft = -20;
-      if (newLeft < -20 && s.dataset.speed < 0) newLeft = 110;
+      if (newLeft > 110 && speed > 0) newLeft = -20;
+      if (newLeft < -20 && speed < 0) newLeft = 110;
 
       s.style.left = newLeft + '%';
+
+      const baseY = parseFloat(s.dataset.baseY || s.style.top || '0');
+      const phase = parseFloat(s.dataset.phase || '0');
+      const driftAmp = parseFloat(s.dataset.driftAmp || '0');
+      s.style.top = (baseY + Math.sin(frameCount * 0.01 + phase) * driftAmp) + 'px';
     });
   }
 
@@ -831,7 +909,7 @@
     predators.forEach((p, i) => {
       if (eatenIndices.has(i)) return; // Already eaten
 
-      p.x += p.vx;
+      p.x += p.vx * getPredatorSpeedMultiplier(p);
 
       // Wrap around screen
       if (p.vx > 0 && p.x > VIEW_WIDTH() + 50) {
@@ -840,9 +918,16 @@
         p.x = VIEW_WIDTH() + 20;
       }
 
-      // Jellyfish and Kraken also drift vertically a bit
+      // Per-type movement behavior to increase lane variety.
       if (p.type === 'jelly' || p.type === 'kraken') {
         p.y += Math.sin(frameCount * 0.02 + p.x * 0.01) * 0.5;
+      } else if (p.type === 'manta') {
+        p.y = p.baseY + Math.sin(frameCount * 0.03 + p.phase) * 18;
+      } else if (p.type === 'angler') {
+        p.y = p.baseY + Math.sin(frameCount * 0.025 + p.phase) * 8;
+      } else if (p.type === 'barracuda') {
+        const burst = 1 + Math.max(0, Math.sin(frameCount * 0.06 + p.phase)) * 0.35;
+        p.x += p.vx * (burst - 1);
       }
 
       p.el.style.left = p.x + 'px';
@@ -894,6 +979,14 @@
     predators = predators.filter((_, i) => !eatenIndices.has(i));
   }
 
+  function getPredatorSpeedMultiplier(predator) {
+    const depthFrac = Math.max(0, Math.min(1, predator.y / WORLD_HEIGHT));
+    const deepPressure = Math.max(0, (depthFrac - 0.45) / 0.55);
+    let multiplier = 1 + deepPressure * DEEP_PREDATOR_SPEED_BONUS;
+    if (diver.hasTreasure) multiplier += TREASURE_ESCAPE_SPEED_BONUS;
+    return multiplier;
+  }
+
   function updateCamera() {
     // Camera follows diver vertically, keeping diver in upper third of screen
     const targetCameraY = diver.y - VIEW_HEIGHT() * 0.35;
@@ -915,8 +1008,7 @@
     }
     if (depthFrac >= ZONES[ZONES.length - 1].top) zone = ZONES[ZONES.length - 1];
 
-    // Lerp between zone colors
-    const zoneFrac = (depthFrac - zone.top) / (zone.bot - zone.top);
+    // Use zone palette to keep each depth band readable.
     waterBg.style.background = `linear-gradient(180deg, ${zone.color1} 0%, ${zone.color2} 100%)`;
 
     // Vignette gets stronger with depth
@@ -928,10 +1020,11 @@
       // Linearly increase darkness from 0.4 to 0.8 depth
       let darkOp = (depthFrac - 0.4) / 0.4;
       darkOp = Math.min(1, darkOp);
-      // Make it almost pitch black at the bottom
-      darknessLayer.style.opacity = darkOp * 0.95;
+      const abyssFrac = Math.max(0, (depthFrac - 0.8) / 0.2);
+      const abyssLift = 1 - abyssFrac * ABYSS_DARKNESS_REDUCTION;
+      darknessLayer.style.opacity = darkOp * DARKNESS_MAX_OPACITY * abyssLift;
       // Turn on the flashlight when it gets dark
-      flashlightBeam.style.opacity = darkOp * 0.8;
+      flashlightBeam.style.opacity = darkOp * 0.75;
     } else {
       darknessLayer.style.opacity = 0;
       flashlightBeam.style.opacity = 0;
@@ -966,10 +1059,10 @@
     if (diver.invincible || diver.won) return;
 
     const diverRect = {
-      x: diver.x + 8,
-      y: diver.y + 8,
-      w: DIVER_SIZE - 16,
-      h: DIVER_SIZE - 16,
+      x: diver.x + DIVER_HITBOX_INSET,
+      y: diver.y + DIVER_HITBOX_INSET,
+      w: DIVER_SIZE - DIVER_HITBOX_INSET * 2,
+      h: DIVER_SIZE - DIVER_HITBOX_INSET * 2,
     };
 
     // Check predator collisions
@@ -979,8 +1072,8 @@
       const predRect = {
         x: p.x + p.w * 0.15,
         y: p.y + p.h * 0.15,
-        w: p.w * 0.7,
-        h: p.h * 0.7,
+        w: p.w * PREDATOR_HITBOX_SCALE,
+        h: p.h * PREDATOR_HITBOX_SCALE,
       };
 
       if (rectsOverlap(diverRect, predRect)) {
@@ -1043,7 +1136,7 @@
       setTimeout(() => {
         el.classList.remove('hit');
         diver.invincible = false;
-      }, 1500);
+      }, 1100);
     } else {
       // Game Over
       playSound('gameover');
@@ -1096,6 +1189,45 @@
       return true;
     });
   }
+
+  function renderGameToText() {
+    const mode = diver.dead ? 'dead' : (diver.won ? 'won' : 'running');
+    const treasureEl = document.getElementById('treasure');
+    return JSON.stringify({
+      note: 'Coordinates use top-left origin; +x right, +y downward.',
+      mode,
+      worldHeight: WORLD_HEIGHT,
+      cameraY: Math.round(cameraY),
+      player: {
+        x: Math.round(diver.x),
+        y: Math.round(diver.y),
+        vx: Number(diver.vx.toFixed(2)),
+        vy: Number(diver.vy.toFixed(2)),
+        lives: diver.lives,
+        hasTreasure: diver.hasTreasure
+      },
+      treasure: treasureEl ? {
+        x: Math.round(parseFloat(treasureEl.style.left) || 0),
+        y: Math.round(parseFloat(treasureEl.style.top) || 0)
+      } : null,
+      predators: predators.map((p) => ({
+        type: p.type,
+        x: Math.round(p.x),
+        y: Math.round(p.y),
+        vx: Number(p.vx.toFixed(2)),
+        w: Math.round(p.w),
+        h: Math.round(p.h)
+      }))
+    });
+  }
+
+  window.render_game_to_text = renderGameToText;
+  window.advanceTime = (ms) => {
+    const steps = Math.max(1, Math.round(ms / (1000 / 60)));
+    for (let i = 0; i < steps; i++) {
+      if (!updateGameFrame()) break;
+    }
+  };
 
   // ---- START ----
   init();
