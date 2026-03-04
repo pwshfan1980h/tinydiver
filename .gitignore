@@ -13,7 +13,13 @@ coverage
 # logs
 logs
 _.log
+*.log
 report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+
+# local testing artifacts
+output/
+.devserver.pid
+progress.md
 
 # dotenv environment variable files
 .env
